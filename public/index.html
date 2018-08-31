@@ -1,0 +1,39 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Blockchain Web API</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Blockchain Web API</h1>
+    <p>Details are
+        <a href="https://github.com/carltonj2000/project3bc-rest-api">here</a>.</p>
+
+    <form onsubmit="return viewBlock()">
+        <label for="view">Block</label>
+        <input type="text" id="blockNumber" placeholder="Block #" value="0" />
+        <input type="submit" value="Get Block" />
+        <label id="viewMessage"></label>
+    </form>
+    <form onsubmit="return addBlock()">
+        <label for="add">Block</label>
+        <input type="text" id="blockData" placeholder="Block Data">
+        <input type="submit" value="Add Block" />
+        <label id="addMessage"></label>
+    </form>
+
+    <button id="clear" onclick="clearBelow()">Clear Data Below</button>
+    <div id="block">
+        <h2 id="block-header">Block #tbd</h2>
+        <code>
+            <pre id="block-result">{ "mock" : "Data for a requested block."}</pre>
+        </code>
+    </div>
+    <script src="main.js"></script>
+</body>
+
+</html>
