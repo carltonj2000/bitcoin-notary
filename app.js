@@ -4,6 +4,7 @@ const bitcoinMessage = require("bitcoinjs-message");
 const moment = require("moment");
 
 const { Blockchain, Block, chainDB } = require("./simpleChain");
+const { validationWindowDefault } = require("./validationWindow");
 
 const app = express();
 app.chain = new Blockchain();
@@ -40,27 +41,72 @@ app.post("/block", (req, res) => {
 });
 
 app.post("/requestValidation", (req, res) => {
-  const { walletAddress } = req.body;
-  if (walletAddress === undefined)
-    return res.send({ error: "walletAddress required in body." });
-  if (app.signatureRequests[walletAddress])
-    return res.send(signMessage(walletAddress));
-  app.signatureRequests[walletAddress] = { requestTimestamp: moment() };
-  res.send(signMessage(walletAddress));
+  const { address } = req.body;
+  if (address === undefined)
+    return res.send({ error: "address required in body." });
+  if (app.signatureRequests[address]) return res.send(message(address));
+  app.signatureRequests[address] = { requestTimeStamp: moment().valueOf() };
+  res.send(message(address));
 });
 
-const signMessage = walletAddress => {
-  const requestTimestamp =
-    app.signatureRequests[walletAddress].requestTimestamp;
-  const validationMinutesRemaining = moment(
-    requestTimestamp
-      .clone()
-      .add(5, "minutes")
-      .diff(moment())
-  ).format("m:ss:SS");
-  return {
-    signMessage: `${walletAddress}:${requestTimestamp}:starRegistry`,
-    validationMinutesRemaining
-  };
+/* constructs a request validation message */
+const message = address => {
+  const { requestTimeStamp } = app.signatureRequests[address];
+  const validationWindow = validationWin(requestTimeStamp);
+  const message = `${address}:${requestTimeStamp}:starRegistry`;
+  app.signatureRequests[address].message = message;
+  return { address, message, requestTimeStamp, validationWindow };
 };
+
+/* calculates the time remaining for the request */
+const validationWin = requestTimeStamp => {
+  const requestTS = moment(requestTimeStamp);
+  const timeNow = moment();
+  let validationWindow;
+  if (
+    requestTS
+      .clone()
+      .add(validationWindowDefault.number, validationWindowDefault.units)
+      .isBefore(timeNow)
+  )
+    validationWindow = "0.0";
+  else {
+    timeRemaining = moment(
+      requestTS
+        .clone()
+        .add(validationWindowDefault.number, validationWindowDefault.units)
+        .diff(timeNow)
+    );
+    const fractionOfSeconds = timeRemaining.format("S");
+    const seconds = timeRemaining.seconds() + timeRemaining.minutes() * 60;
+    validationWindow = `${seconds}.${fractionOfSeconds}`;
+  }
+  return validationWindow;
+};
+
+app.post("/message-signature/validate", (req, res) => {
+  const { address, signature } = req.body;
+  const { message, requestTimeStamp } = app.signatureRequests[address];
+  let messageSignature;
+  try {
+    if (bitcoinMessage.verify(message, address, signature))
+      messageSignature = "valid";
+    else messageSignature = "invalid";
+  } catch (e) {
+    messageSignature = "invalid";
+  }
+  const validationWindow = validationWin(requestTimeStamp);
+  const registerStar = validationWindow !== "0.0";
+  return res.send({
+    registerStar,
+    status: {
+      address,
+      requestTimeStamp,
+      message,
+      validationWindow,
+      messageSignature
+    }
+  });
+});
+
 module.exports = app;
