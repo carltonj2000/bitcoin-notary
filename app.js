@@ -53,10 +53,13 @@ app.post("/requestValidation", (req, res) => {
 const message = address => {
   const { requestTimeStamp } = app.signatureRequests[address];
   const validationWindow = validationWin(requestTimeStamp);
-  const message = `${address}:${requestTimeStamp}:starRegistry`;
-  app.signatureRequests[address].message = message;
+  const message = messageGenerate(address, requestTimeStamp);
   return { address, message, requestTimeStamp, validationWindow };
 };
+
+/* generate the message based on time stamp and address */
+const messageGenerate = (address, requestTimeStamp) =>
+  `${address}:${requestTimeStamp}:starRegistry`;
 
 /* calculates the time remaining for the request */
 const validationWin = requestTimeStamp => {
@@ -86,7 +89,8 @@ const validationWin = requestTimeStamp => {
 
 app.post("/message-signature/validate", (req, res) => {
   const { address, signature } = req.body;
-  const { message, requestTimeStamp } = app.signatureRequests[address];
+  const { requestTimeStamp } = app.signatureRequests[address];
+  const message = messageGenerate(address, requestTimeStamp);
   let messageSignature;
   try {
     if (bitcoinMessage.verify(message, address, signature))
@@ -97,6 +101,8 @@ app.post("/message-signature/validate", (req, res) => {
   }
   const validationWindow = validationWin(requestTimeStamp);
   const registerStar = validationWindow !== "0.0";
+  if (messageSignature === "valid")
+    app.signatureRequests[address].registerStart = registerStar;
   return res.send({
     registerStar,
     status: {
