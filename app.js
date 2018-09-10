@@ -29,8 +29,16 @@ app.get("/block/:blockHeight", (req, res) => {
 });
 
 app.post("/block", (req, res) => {
-  const { body } = req.body;
-  if (!body) return res.send({ error: "Add block requires body." });
+  const { body } = req;
+  const { address, star } = body;
+  if (!address)
+    return res.send({
+      error: "Missing address required for start registration."
+    });
+  if (!star)
+    return res.send({
+      error: "Missing star information required for start registration."
+    });
   app.chain
     .addBlock(new Block(body))
     .then(block => {

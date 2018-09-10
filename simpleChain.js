@@ -97,7 +97,6 @@ class Blockchain {
         .slice(0, -3);
       // Block height
       newBlock.height = this.height;
-      debugger;
       // previous block hash
       if (this.height > 0) newBlock.previousBlockHash = this.previousHash;
       // Block hash with SHA256 using newBlock and converting to a string
