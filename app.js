@@ -1,3 +1,7 @@
+/**
+ * @author Carlton Joseph
+ * @fileoverview Express Webservice
+ */
 const express = require("express");
 const bitcoin = require("bitcoinjs-lib");
 const bitcoinMessage = require("bitcoinjs-message");
@@ -15,6 +19,7 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+/** star lookup by block height */
 app.get("/block/:blockHeight", (req, res) => {
   const { blockHeight } = req.params;
   console.log("height =", blockHeight);
@@ -28,6 +33,25 @@ app.get("/block/:blockHeight", (req, res) => {
     .catch(e => res.send({ error: `get block => ${e}` }));
 });
 
+/** star lookup by wallet address */
+app.get("/star/address::address", (req, res) => {
+  const { address } = req.params;
+  app.chain
+    .searchByAddress(address)
+    .then(stars => res.send(stars))
+    .catch(e => res.send({ error: `search failed for address => ${address}` }));
+});
+
+/** star lookup by block hash */
+app.get("/star/hash::hash", (req, res) => {
+  const { hash } = req.params;
+  app.chain
+    .searchByHash(hash)
+    .then(star => res.send(star))
+    .catch(e => res.send({ error: `search failed for hash => ${hash}` }));
+});
+
+/** star registration */
 app.post("/block", (req, res) => {
   const { body } = req;
   const { address, star } = body;
@@ -48,6 +72,7 @@ app.post("/block", (req, res) => {
     .catch(e => res.send({ error: `add block => ${e}` }));
 });
 
+/* user validation */
 app.post("/requestValidation", (req, res) => {
   const { address } = req.body;
   if (address === undefined)
@@ -121,6 +146,11 @@ app.post("/message-signature/validate", (req, res) => {
       messageSignature
     }
   });
+});
+
+app.get("/showchain", (_, res) => {
+  app.chain.show();
+  res.send({ status: "showed block chain" });
 });
 
 module.exports = app;

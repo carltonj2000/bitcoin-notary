@@ -1,0 +1,56 @@
+[
+  {
+    "pubkey": "A4Ku/oSXMSUufEH+wZdOnV99JVzprb1BhsMvrkxcjqTb",
+    "privateKey": "VGl54tqCckklceSO5bMQ1gd0Yu5/PkAX/MghCSvMvL4=",
+    "compressed": true,
+    "address": "14edRzd1PYA59UqKv8Es5RLNHLPqi9Uun3",
+    "stars": [
+      {
+        "dec": "-26° 29' 24.0",
+        "ra": "16h 29m 0.0s",
+        "story": "Found star 0 using https://www.google.com/sky/"
+      }
+    ]
+  },
+  {
+    "pubkey": "At+6RKoB5X7eLkI1xQJRgKQ+gfWeQPqQuFKoCLtsSH+p",
+    "privateKey": "bzPJTEVVtLjORKeijMe/7no90To8xyho37R5Kbv/xGI=",
+    "compressed": true,
+    "address": "1Q6Fd2ABw96RwgJfPWYkyo6etdyRvLSf56",
+    "stars": [
+      {
+        "dec": "-26° 29' 24.1",
+        "ra": "16h 29m 1.0s",
+        "story": "Found star 1 using https://www.google.com/sky/"
+      },
+      {
+        "dec": "-26° 29' 24.2",
+        "ra": "16h 29m 2.0s",
+        "story": "Found star 2 using https://www.google.com/sky/"
+      }
+    ]
+  },
+  {
+    "pubkey": "Aljd9Mwk85uotLgEDwn89QIDs8bjZk9a1F6PjCnqi7Wj",
+    "privateKey": "VdzUO/o6e2EfXy6VeBabu4JsfC2Id8bnpyCE/7bqEfQ=",
+    "compressed": true,
+    "address": "1H3si8tpnyfMRr76JCRCzyYqhuDXRhUGdJ",
+    "stars": [
+      {
+        "dec": "-26° 29' 24.3",
+        "ra": "16h 29m 3.0s",
+        "story": "Found star 3 using https://www.google.com/sky/"
+      },
+      {
+        "dec": "-26° 29' 24.4",
+        "ra": "16h 29m 4.0s",
+        "story": "Found star 4 using https://www.google.com/sky/"
+      },
+      {
+        "dec": "-26° 29' 24.5",
+        "ra": "16h 29m 5.0s",
+        "story": "Found star 5 using https://www.google.com/sky/"
+      }
+    ]
+  }
+]

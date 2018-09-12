@@ -304,6 +304,49 @@ class Blockchain {
       .catch(e => console.error("Failed validating chain.", e));
   }
 
+  /** search blockchain by wallet address */
+  searchByAddress(address) {
+    const result = [];
+    return new Promise((resolve, reject) => {
+      db.createReadStream()
+        .on("data", data => {
+          const star = JSON.parse(data.value);
+          if (star.body && star.body.address && star.body.address === address)
+            result.push(star);
+        })
+        .on("error", err => {
+          console.error("Unable to read data stream during search!", err);
+          reject(err);
+        })
+        .on("close", () => {
+          resolve(result);
+        });
+    });
+  }
+
+  /** search blockchain by hash */
+  searchByHash(hash) {
+    return new Promise((resolve, reject) => {
+      db.createReadStream()
+        .on("data", data => {
+          const star = JSON.parse(data.value);
+          if (star.hash && star.hash === hash) resolve(star);
+        })
+        .on("error", err => {
+          console.error("Unable to read data stream during search!", err);
+          reject(err);
+        })
+        .on("close", () => {
+          reject({ result: `star not found for hash => ${hash}` });
+        });
+    });
+  }
+
+  /** search blockchain by height */
+  searchByHeight(height) {
+    return this.getBlock(height);
+  }
+
   induceErrorData(height, data) {
     this.inProgress = this.inProgress
       .then(

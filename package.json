@@ -9,7 +9,10 @@
     "a-db": "jest --detectOpenHandles",
     "b": "jest -t \"request validation\"",
     "b-db": "node --inspect-brk ./node_modules/.bin/jest -it \"request validation\"",
-    "z": "jest -t \"moment\""
+    "z": "jest -t \"moment\"",
+    "generate-star-data": "node generate-star-data.js",
+    "jsdocs": "jsdoc app.js -r -d docs",
+    "docs": "documentation build app.js -f html -o docs"
   },
   "dependencies": {
     "bitcoinjs-lib": "^4.0.1",
@@ -20,7 +23,9 @@
     "moment": "^2.22.2"
   },
   "devDependencies": {
+    "documentation": "^8.1.2",
     "jest": "^23.4.2",
+    "jsdoc": "^3.5.5",
     "nodemon": "^1.18.3",
     "rimraf": "^2.6.2",
     "supertest": "^3.1.0"
