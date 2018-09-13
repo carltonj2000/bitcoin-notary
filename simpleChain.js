@@ -167,6 +167,34 @@ class Blockchain {
       .catch(e => console.error("Failed showing blockchain."));
   }
 
+  getchain() {
+    const chain = [];
+    return new Promise((resolveOuter, rejectOuter) => {
+      for (let height = 0; height < this.height; height++) {
+        this.inProgress = this.inProgress
+          .then(
+            () =>
+              new Promise((resolve, reject) => {
+                db.get(height)
+                  .then(block => {
+                    chain.push(block);
+                    resolve();
+                  })
+                  .catch(e => {
+                    console.error(`Failed show block.`, e);
+                    reject();
+                  });
+              })
+          )
+          .catch(e => {
+            console.error(`Failed show block loop.`, e);
+            rejectOuter();
+          });
+      }
+      resolveOuter(chain);
+    });
+  }
+
   // Get block height
   getBlockHeight() {
     this.inProgress

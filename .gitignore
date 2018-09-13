@@ -2,4 +2,6 @@ node_modules/
 yarn-error.log
 .vscode/
 blockchainDB/
-start-data.json
+star-data.json
+star-chain.json
+expire.js
