@@ -2,12 +2,13 @@
  * Single file used so same value is use in code and tests */
 
 validationWindowOptions = Object.freeze({
-  a: { number: 1, units: "seconds" },
-  b: { number: 5, units: "minutes" }
+  oneSecond: { number: 1, units: "seconds" },
+  fiveMinutes: { number: 5, units: "minutes" }
 });
 
-const validationWindowDefault = validationWindowOptions.a;
+const validationWindowDefault = validationWindowOptions.fiveMintues;
 
 module.exports = {
+  validationWindowOptions,
   validationWindowDefault
 };

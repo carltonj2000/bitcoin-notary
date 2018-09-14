@@ -11,26 +11,44 @@ const { Blockchain, Block, chainDB } = require("./simpleChain");
 const { validationWindowDefault } = require("./validationWindow");
 
 const app = express();
-app.chain = new Blockchain();
-app.signatureRequests = {};
-
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.chain = new Blockchain();
+/* store validation request status in the object below */
+app.validationRequests = {};
+/* set the validation window
+ * used during test to reduce the validation window */
+app.setValidationWindow = (validationWindow = validationWindowDefault) =>
+  (app.validationWindow = validationWindow);
+app.setValidationWindow();
+/* Use to expire use request 
+ * jestjs tests use this time to setup test cases */
+app.getExpireTimeInMs = () =>
+  app.validationWindow.units === "seconds"
+    ? app.validationWindow.number * 1000
+    : app.validationWindow.number * 60 * 1000;
 
 /** user validation request */
 app.post("/requestValidation", (req, res) => {
   const { address } = req.body;
   if (address === undefined)
     return res.send({ error: "address required in body." });
-  if (app.signatureRequests[address]) return res.send(message(address));
-  app.signatureRequests[address] = { requestTimeStamp: moment().valueOf() };
+  if (app.validationRequests[address]) return res.send(message(address));
+  const requestTimeStamp = moment().valueOf();
+  /* remove this entry when the time expires */
+  const timeout = setTimeout(
+    () => delete app.validationRequests[address],
+    app.getExpireTimeInMs()
+  );
+  app.validationRequests[address] = { requestTimeStamp, timeout };
   res.send(message(address));
 });
 
 /* constructs a request validation message */
 const message = address => {
-  const { requestTimeStamp } = app.signatureRequests[address];
+  const { requestTimeStamp } = app.validationRequests[address];
   const validationWindow = validationWin(requestTimeStamp);
   const message = messageGenerate(address, requestTimeStamp);
   return { address, message, requestTimeStamp, validationWindow };
@@ -48,7 +66,7 @@ const validationWin = requestTimeStamp => {
   if (
     requestTS
       .clone()
-      .add(validationWindowDefault.number, validationWindowDefault.units)
+      .add(app.validationWindow.number, app.validationWindow.units)
       .isBefore(timeNow)
   )
     validationWindow = "0.0";
@@ -56,7 +74,7 @@ const validationWin = requestTimeStamp => {
     timeRemaining = moment(
       requestTS
         .clone()
-        .add(validationWindowDefault.number, validationWindowDefault.units)
+        .add(app.validationWindow.number, app.validationWindow.units)
         .diff(timeNow)
     );
     const fractionOfSeconds = timeRemaining.format("S");
@@ -69,7 +87,12 @@ const validationWin = requestTimeStamp => {
 /** user validate request */
 app.post("/message-signature/validate", (req, res) => {
   const { address, signature } = req.body;
-  const { requestTimeStamp } = app.signatureRequests[address];
+  if (!(address in app.validationRequests))
+    res.send({
+      registerStar: false,
+      status: { address, validationWindow: 0.0 }
+    });
+  const { requestTimeStamp } = app.validationRequests[address];
   const message = messageGenerate(address, requestTimeStamp);
   let messageSignature;
   try {
@@ -82,7 +105,7 @@ app.post("/message-signature/validate", (req, res) => {
   const validationWindow = validationWin(requestTimeStamp);
   const registerStar = validationWindow !== "0.0";
   if (messageSignature === "valid")
-    app.signatureRequests[address].registerStart = registerStar;
+    app.validationRequests[address].registerStart = registerStar;
   return res.send({
     registerStar,
     status: {

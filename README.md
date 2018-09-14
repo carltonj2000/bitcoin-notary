@@ -254,13 +254,13 @@ previous sections.
 The `jestjs` tests `describe` sections are summarized below and full details
 can be found in the `index.test.js`.
 
-- `setup tests` by
-  - removing the star blockchain by deleting the `blockchainDB` directory,
-  - removing the test data by deleting the `star-data.json` file, and
-  - generating a new set of star data in the `star-data.json` file.
-    - `star-data.json` is generate buy the `generate-star-data.js` file.
-    - `star-data.json` is generated with three wallet addresses
-      and 1, 2 &amp; 3 stars respectively.
+- Before the tests are run the following operations are done:
+- removing the star blockchain by deleting the `blockchainDB` directory,
+- removing the test data by deleting the `star-data.json` file, and
+- generating a new set of star data in the `star-data.json` file.
+  - `star-data.json` is generate buy the `generate-star-data.js` file.
+  - `star-data.json` is generated with three wallet addresses
+    and 1, 2 &amp; 3 stars respectively.
 - `basic server tests` to see if the server has basic functionality
 - `id validation and star registration` registers all the stars in
   `star-data.json`.

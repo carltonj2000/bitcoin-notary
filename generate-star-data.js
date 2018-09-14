@@ -37,14 +37,14 @@ const generateStarData = () => {
 
   const stars = JSON.stringify(starData, undefined, 2);
   return new Promise(resolve => {
-    fs.writeFile(testStarDataFilename, stars, "utf8", () => resolve());
+    fs.writeFile(testStarDataFilename, stars, "utf8", () =>
+      resolve(`Star data written to => ${testStarDataFilename}`)
+    );
   });
 };
 
 if (typeof require != "undefined" && require.main === module)
-  generateStarData().then(() =>
-    console.log("star data written to", testStarDataFilename)
-  );
+  generateStarData().then(resp => console.log(resp));
 
 module.exports = {
   generateStarData,
