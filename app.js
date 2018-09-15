@@ -154,7 +154,7 @@ app.get("/block/:blockHeight", (req, res) => {
 });
 
 /** star lookup by wallet address */
-app.get("/star/address::address", (req, res) => {
+app.get("/stars/address::address", (req, res) => {
   const { address } = req.params;
   app.chain
     .searchByAddress(address)
@@ -163,7 +163,7 @@ app.get("/star/address::address", (req, res) => {
 });
 
 /** star lookup by block hash */
-app.get("/star/hash::hash", (req, res) => {
+app.get("/stars/hash::hash", (req, res) => {
   const { hash } = req.params;
   app.chain
     .searchByHash(hash)
@@ -177,6 +177,12 @@ app.get("/getchain", (_, res) => {
     .getchain()
     .then(chain => res.send(chain))
     .catch(e => console.log(e) || res.send({ error: e.toString() }));
+});
+
+/** display block chain on the CLI - use in testing */
+app.get("/showchain", (_, res) => {
+  app.chain.show();
+  res.send({ status: "show successful" });
 });
 
 module.exports = app;

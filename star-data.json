@@ -1,9 +1,9 @@
 [
   {
-    "pubkey": "AllG7x4qI28DVUO1n1A07jUpRAQCjhV0Cf+2Xf+gq+A2",
-    "privateKey": "JhtpPJdSPpWXxqCSIYSON2PThzpsRgbF9Lr6hCjATxI=",
+    "pubkey": "A8uFzrBC2fHu42QjmHvt6z6IwxZH9m7eibrXghjBDJ7I",
+    "privateKey": "BFR/1lE8BKw0Rd16B0TiLsp33hU+RDav2WAr+J6Ns1g=",
     "compressed": true,
-    "address": "1Duynb31zEbjFPvL2eZFEb9Wbjpes29uq3",
+    "address": "1CNYoPh4mB5CD4ogog7Uiwe8ywEkeyk5P5",
     "stars": [
       {
         "dec": "-26° 29' 24.0",
@@ -13,10 +13,10 @@
     ]
   },
   {
-    "pubkey": "AgtTTejBPoUC32pfISBzepbH+qaO8AZwxejn2ymuN0PL",
-    "privateKey": "qmOUumkX3RrKcBxjHa8ZV0m7vfEfvhDIsd5ojDppwk0=",
+    "pubkey": "A8wGHIRxO0tMNdokg1Qs0FSHhxBki9B4t7XLRDt0fR4W",
+    "privateKey": "Gh9vUvE4+eIQhZ29CZ7PSP2z/fCssGqN5Anvvk+OCR0=",
     "compressed": true,
-    "address": "1FQLyJ5hDetJpaiFohJYz6CznMsh4cAmUJ",
+    "address": "18CDSLQihGu2QCjwPZbymmcrcCo11ChK6c",
     "stars": [
       {
         "dec": "-26° 29' 24.1",
@@ -31,10 +31,10 @@
     ]
   },
   {
-    "pubkey": "A+EmeON+/5BSFoO9NsSSdzMQb+tdR3BSekqTCsCxW+K2",
-    "privateKey": "URhKvJQQ1SnOnaexNV/Gjb+LMlsXP4arwbk53XH+QGg=",
+    "pubkey": "A7//G5/5qMYpBHxZy7ZHZMPJECeY5QJT8qaLYIgmYLXS",
+    "privateKey": "7ZWaNjdL1CJbwpUqpb2ZZQNmi8Rq22KmFGp9pX5oS4s=",
     "compressed": true,
-    "address": "1Ce5q9x1HTu1g4jEkEuKVYrg1n93fykbDe",
+    "address": "1KEs4ZPDBdLcAbXk3GKES8vmGhA5wDHXR2",
     "stars": [
       {
         "dec": "-26° 29' 24.3",

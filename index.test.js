@@ -16,7 +16,7 @@ const {
 const { validationWindowOptions } = require("./validationWindow");
 const moment = require("moment");
 
-beforeAll(async () => {
+beforeAll(async done => {
   /* change callback to promis so async/await can be used */
   const del = fileDir =>
     new Promise((resolve, reject) =>
@@ -25,14 +25,13 @@ beforeAll(async () => {
         else return resolve(`deleted ${fileDir}`);
       })
     );
-  try {
-    await del(chainDB);
-    await del(testStarDataFilename);
-    await generateStarData();
-    app.setValidationWindow(validationWindowOptions.oneSecond);
-  } catch (e) {
-    console.log(e);
-  }
+  //await del(chainDB);
+  //await del(testStarDataFilename);
+  //await generateStarData();
+  const validationWindow = validationWindowOptions.oneSecond;
+  app.setValidationWindow(validationWindow);
+  jest.setTimeout(app.getExpireTimeInMs() * 2 + 1000);
+  done();
 });
 
 describe("basic server tests", () => {
@@ -195,7 +194,7 @@ describe("with test users", () => {
     test("wallet address", async done => {
       expect(chain.length).toBeGreaterThan(1);
       for (const user of users) {
-        const stars = await reqPath(`/star/address:${user.address}`);
+        const stars = await reqPath(`/stars/address:${user.address}`);
         expect(stars.length).toBe(getStarsByWallet(user.address).length);
       }
       done();
@@ -204,7 +203,7 @@ describe("with test users", () => {
     test("hash", async done => {
       expect(chain.length).toBeGreaterThan(1);
       const star = JSON.parse(getRandomStar());
-      const resp = await reqPath(`/star/hash:${star.hash}`);
+      const resp = await reqPath(`/stars/hash:${star.hash}`);
       expect(resp.height).toBe(star.height);
       expect(resp.hash).toBe(star.hash);
       done();

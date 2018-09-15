@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "nodemon index.js",
-    "a": "jest",
+    "test": "jest",
     "a-db": "node --inspect-brk ./node_modules/.bin/jest",
     "a-db1": "jest --detectOpenHandles",
     "b": "jest -t \"request validation\"",

@@ -12,11 +12,13 @@ This project is based of the
 
 ## Run Project
 
-To install dependencies and start the web API server the following:
+Install dependencies, start the web API server and run the tests, buy executing
+the following commands respectively.
 
 ```
 yarn
 yarn start
+yarn test
 ```
 
 ## Web API
@@ -29,6 +31,8 @@ The web API server provides the following functionality:
 
 The endpoints, require for the above functionality, are described in the
 following sections. All endpoints use JSON for requests and responses.
+For more precision the server returns milliseconds for the `requestTimeStamp`
+(not seconds as shown in the text below).
 
 ### Validate User
 
@@ -43,7 +47,7 @@ In order to validate a user the following transactions occur:
 
 ##### POST `http://localhost:8000/requestValidation`
 
-The client preforms a POST request at the URL noted above with the data in the
+The client performs a POST request at the URL noted above with the data in the
 following format.
 
 ```
@@ -68,7 +72,7 @@ The server response with a message to sign, within a given validation window
 
 ##### POST `http://localhost:8000/validate`
 
-The client preforms a POST request at the URL noted above with the data in the
+The client performs a POST request at the URL noted above with the data in the
 following format.
 
 ```
@@ -80,9 +84,9 @@ following format.
 
 If the client responds within the validation window, then the server responds
 with the data in the format seen below. If `"registerStar": true` is seen then
-the signature is correct the client is allowed to register one star with no time
-limit. A value of `"registerStar": false` means the user can not register a
-star due to an invalid message signature.
+the signature is correct and the client is allowed to register one star with no
+time limit. A value of `"registerStar": false` means the user can not register
+a star due to an invalid message signature.
 
 ```
 {
@@ -114,8 +118,8 @@ with the data in the format seen below.
 
 ##### POST `http://localhost:8000/block`
 
-Once a client is validate, the client is allowed to register one star by
-preforming a POST request at the URL noted above with the data in the
+Once a client is validated, the client is allowed to register one star by
+performing a POST request at the URL noted above with the data in the
 following format.
 
 ```
@@ -129,7 +133,7 @@ following format.
 }
 ```
 
-Once the start is registered, the server responds with data in the following
+Once the star is registered, the server responds with data in the following
 format. The star `"story"` is truncated by the server to 500 bytes if it
 is longer than 500 bytes.
 
@@ -156,7 +160,7 @@ is longer than 500 bytes.
 
 ##### GET `http://localhost:8000/stars/address:[ADDRESS]`
 
-The client preforms a GET request, with the wallet address, at the URL noted
+The client performs a GET request, with the wallet address, at the URL noted
 above.
 The server responds with data in the following format.
 
@@ -199,7 +203,7 @@ The server responds with data in the following format.
 
 ##### GET `http://localhost:8000/stars/hash:[hash]`
 
-The client preforms a GET request, with the star hash value, at the URL noted
+The client performs a GET request, with the star hash value, at the URL noted
 above.
 The server responds with data in the following format.
 
@@ -225,7 +229,7 @@ The server responds with data in the following format.
 
 ##### GET `http://localhost:8000/block/[height]`
 
-The client preforms a GET request, with a block hight, at the URL noted
+The client performs a GET request, with a block hight, at the URL noted
 above.
 The server responds with data in the following format.
 
@@ -249,23 +253,35 @@ The server responds with data in the following format.
 
 ## Testing
 
+At present the tests have some issues.
+Specifically the
+
+- deletion of the blockchain database directory,
+- deletion of the test star data file, and
+- the generation of the new test data file
+  are problematic and are commented out.
+
+Due to this the following text is a description of operational intent and not
+what is actually happening. The above steps are done manually.
+
 The `index.test.js` file uses `jestjs` test to test the endpoints noted in the
 previous sections.
-The `jestjs` tests `describe` sections are summarized below and full details
+The `jestjs`-tests `describe`-sections are summarized below and full details
 can be found in the `index.test.js`.
 
 - Before the tests are run the following operations are done:
-- removing the star blockchain by deleting the `blockchainDB` directory,
-- removing the test data by deleting the `star-data.json` file, and
-- generating a new set of star data in the `star-data.json` file.
-  - `star-data.json` is generate buy the `generate-star-data.js` file.
-  - `star-data.json` is generated with three wallet addresses
-    and 1, 2 &amp; 3 stars respectively.
-- `basic server tests` to see if the server has basic functionality
-- `id validation and star registration` registers all the stars in
-  `star-data.json`.
-- `star loopup` get the complete block chain and then looks up stars by
-  wallet address, block hash and block height.
+  - remove the star blockchain by deleting the `blockchainDB` directory,
+  - remove the test data by deleting the `star-data.json` file, and
+  - generate a new set of star data in the `star-data.json` file.
+    - `star-data.json` is generated by the `generate-star-data.js` file.
+    - `star-data.json` is generated with three wallet addresses
+      and 1, 2 &amp; 3 stars respectively.
+- `basic server tests` verifies basic server functionality
+- `id validation` verifies id validation functionality
+- `with test users` from the `star-data.json` file
+  - `star registration` registers all the stars in the `star-data.json` file.
+  - `star lookup by` looks up stars by wallet address, block hash and block
+    height. It compares them to a retrieved copy of the blockchain data.
 
 # Scratch pad
 
