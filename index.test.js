@@ -14,6 +14,7 @@ const {
   testStarDataFilename
 } = require("./generate-star-data");
 const { validationWindowOptions } = require("./validationWindow");
+const moment = require("moment");
 
 beforeAll(async () => {
   try {
@@ -55,28 +56,49 @@ describe.skip("basic server tests", () => {
   });
 });
 
-/** make a validation request with a dummy address */
+/** start a validation request */
 const reqValidation = address =>
   request(app)
     .post("/requestValidation")
     .send({ address })
     .expect(200)
     .expect("Content-type", /json/)
-    .then(resp => JSON.parse(resp.text));
+    .then(resp => JSON.parse(resp.text))
+    .catch(e => console.error("reqValidation", e));
 
-/** continue a validation request with a validation signed message */
+/** request a signature/user-address validation */
 const reqSignature = (address, signature) =>
   request(app)
     .post("/message-signature/validate")
     .send({ address, signature })
     .expect("Content-type", /json/)
     .expect(200)
-    .then(resp => JSON.parse(resp.text));
+    .then(resp => JSON.parse(resp.text))
+    .catch(e => console.error("reqSignature", e));
 
-/** sleep for a given number of ms */
+/** request to register a start */
+const reqRegister = (address, star) =>
+  request(app)
+    .post("/block")
+    .send({ address, star })
+    .expect("Content-type", /json/)
+    .expect(200)
+    .then(resp => JSON.parse(resp.text))
+    .catch(e => console.error("reqSignature", e));
+
+/** request via get a urlPath */
+const reqPath = urlpath =>
+  request(app)
+    .get(urlpath)
+    .expect("Content-type", /json/)
+    .expect(200)
+    .then(resp => JSON.parse(resp.text))
+    .catch(e => console.error("reqPath", e));
+
+/** sleep for a given number of ms - used to test timeout condition */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-describe("id validation", () => {
+describe("with test users", () => {
   let users;
 
   beforeAll(async () => {
@@ -93,142 +115,112 @@ describe("id validation", () => {
     }
   });
 
-  test("invalid signature", async done => {
-    expect(users).not.toBeFalsy();
-    const { address } = users[0]; // arbitrary user address
-    await reqValidation(address);
-    const respS = await reqSignature(address, "bad"); // bad signature
-    expect(respS.status.messageSignature).toBe("invalid");
-    done();
-  });
+  describe.skip("id validation", () => {
+    test("invalid signature", async done => {
+      expect(users).not.toBeFalsy();
+      const { address } = users[0]; // arbitrary user address
+      await reqValidation(address);
+      const respS = await reqSignature(address, "bad"); // bad signature
+      expect(respS.status.messageSignature).toBe("invalid");
+      done();
+    });
 
-  test("valid signature", async done => {
-    expect(users).not.toBeFalsy();
-    const { address, privateKey, compressed } = users[0];
-    const respV = await reqValidation(address);
-    const signature = bitcoinMessage
-      .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
-      .toString("base64");
-    sleep(app.getExpireTimeInMs() + 1000);
-    const respS = await reqSignature(address, signature);
-    expect(respS.status.messageSignature).toBe("valid");
-    done();
-  });
+    test("valid signature", async done => {
+      expect(users).not.toBeFalsy();
+      const { address, privateKey, compressed } = users[0];
+      const respV = await reqValidation(address);
+      const signature = bitcoinMessage
+        .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
+        .toString("base64");
+      sleep(app.getExpireTimeInMs() + 1000);
+      const respS = await reqSignature(address, signature);
+      expect(respS.status.messageSignature).toBe("valid");
+      done();
+    });
 
-  test("timeout", async done => {
-    expect(users).not.toBeFalsy();
-    const { address, privateKey, compressed } = users[0];
-    const respV = await reqValidation(address);
-    const signature = bitcoinMessage
-      .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
-      .toString("base64");
-    await sleep(app.getExpireTimeInMs() + 1000);
-    const respS = await reqSignature(address, signature);
-    expect(respS.status.validationWindow).toBe(0.0);
-    done();
-  });
-});
-
-describe.skip("star registration", () => {
-  test.skip("file star registration", done => {
-    expect(users).toBeTruthy();
-    const promises = [];
-    users.forEach(user =>
-      user.stars.forEach(star => {
-        promises.push(addStar(user, star, done));
-        console.log(user.address, star.story);
-      })
-    );
-    Promise.all(promises)
-      .then(() => console.log("Promises finished") || done(0))
-      .catch(e => console.log("Promises failed", e));
-  });
-
-  const addStar = (user, star) => {
-    const { pubkey: pubK, privateKey: privK, compressed } = user;
-    const pubkey = new Buffer.from(pubK, "base64");
-    const privateKey = new Buffer.from(privK, "base64");
-    const { address } = bitcoin.payments.p2pkh({ pubkey });
-    return reqValidation(address)
-      .then(resp => JSON.parse(resp.text))
-      .then(resp => {
-        const signature = bitcoinMessage
-          .sign(resp.message, privateKey, compressed)
-          .toString("base64");
-        //      const errMsgSig = "bob"; // test error case
-        return new Promise(resolve =>
-          setTimeout(
-            () =>
-              request(app)
-                .post("/message-signature/validate")
-                .send({ address, signature })
-                //        .send({ address, signature: errMsgSig }) // test error case
-                .expect("Content-type", /json/)
-                .expect(200)
-                .then(resp => JSON.parse(resp.text))
-                .then(resp => resolve(resp)),
-            0
-          )
-        ); // change time out to fail or pass validation window
-      })
-      .then(resp => {
-        if (!resp.registerStar) {
-          console.log("Failed to get star registation authorization.");
-        } else {
-          console.log("registering star", star);
-          request(app)
-            .post("/block")
-            .send({ address, star })
-            /*.expect("Content-type", /json/)
-        .expect(200)
-        .then(resp => JSON.parse(resp.text))*/
-            .then(resp => console.log(resp.text));
-        }
-      });
-  };
-});
-
-describe.skip("star lookup", () => {
-  test("show chain", () => request(app).get("/showchain"));
-  test("file star lookup by wallet address", done => {
-    fs.readFile("star-data.json", "utf8", (err, data) => {
-      if (err) return console.log(err);
-      const users = JSON.parse(data);
-      const promises = [];
-      users.forEach(user =>
-        promises.push(
-          request(app)
-            .get(`/star/address:${user.address}`)
-            /*.expect("Content-type", /json/)
-      .expect(200)
-      .then(resp => JSON.parse(resp.text))*/
-            .then(resp => console.log(resp.text))
-        )
-      );
-
-      Promise.all(promises).then(() => {
-        console.log("Finished search promises.");
-        done();
-      });
+    test("timeout", async done => {
+      expect(users).not.toBeFalsy();
+      const { address, privateKey, compressed } = users[0];
+      const respV = await reqValidation(address);
+      const signature = bitcoinMessage
+        .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
+        .toString("base64");
+      await sleep(app.getExpireTimeInMs() + 1000);
+      const respS = await reqSignature(address, signature);
+      expect(parseFloat(respS.status.validationWindow)).toBe(0.0);
+      done();
     });
   });
 
-  test("star lookup by hash", done => {
-    const hash =
-      "0e1fa725c0dbb308cbdc24bea04f9639dc24f26ef378b076f16402e0f9a47cf0";
-    request(app)
-      .get(`/star/hash:${hash}`)
-      .then(resp => console.log(resp.text) || done());
+  describe.skip("star registration", async () => {
+    test("for a test users and stars", async done => {
+      expect(users).not.toBeFalsy();
+      let firstStar = true;
+      for (const user of users) {
+        for (const star of user.stars) {
+          if (firstStar) {
+            await addStar(user, star, app.getExpireTimeInMs() + 1000);
+            firstStar = false;
+          } else await addStar(user, star);
+        }
+      }
+      done();
+    });
+
+    const addStar = async (user, star, waitRms = 0) => {
+      const { address, privateKey, compressed } = user;
+      const respV = await reqValidation(address);
+      expect(respV).not.toBeFalsy();
+      expect(respV.message).not.toBeFalsy();
+      const signature = bitcoinMessage
+        .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
+        .toString("base64");
+      const respS = await reqSignature(address, signature);
+      expect(respS.registerStar).toBe(true);
+      if (waitRms) await sleep(waitRms);
+      const respR = await reqRegister(address, star);
+      /* verify some feilds in the response */
+      expect(respR.time).toBeTruthy();
+      expect(respR.hash).toBeTruthy();
+      expect(respR.previousBlockHash).toBeTruthy();
+    };
   });
 
-  test("star lookup by block height", done => {
-    request(app)
-      .get("/block/5")
-      .then(resp => console.log(resp.text) || done());
-  });
+  describe("star lookup by", async () => {
+    let chain;
 
-  test("get chain", () =>
-    request(app)
-      .get("/getchain")
-      .then(chain => console.log(chain)));
+    beforeAll(async () => (chain = await reqPath("/getchain")));
+
+    test("wallet address", async done => {
+      for (const user of users) {
+        const stars = await reqPath(`/star/address:${user.address}`);
+        expect(stars.length).toBe(getStarsByWallet(user.address).length);
+      }
+      done();
+    });
+
+    test.skip("hash", async done => {
+      const star = JSON.parse(getRandomStar());
+      const resp = await reqPath(`/star/hash:${star.hash}`);
+      expect(resp.height).toBe(star.height);
+      expect(resp.hash).toBe(star.hash);
+      done();
+    });
+
+    test.skip("block height", async done => {
+      const star = JSON.parse(getRandomStar());
+      const resp = await reqPath(`/block/${star.height}`);
+      expect(resp.height).toBe(star.height);
+      expect(resp.hash).toBe(star.hash);
+      done();
+    });
+
+    const getRandomStar = () => chain[Math.floor(Math.random() * chain.length)];
+    const getStarsByWallet = wallet =>
+      chain.reduce((a, starStr) => {
+        const star = JSON.parse(starStr);
+        if (star.body.address === wallet) return [...a, star];
+        else return a;
+      }, []);
+  });
 });

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon index.js",
     "a": "jest",
-    "a-db": "jest --detectOpenHandles",
+    "a-db": "node --inspect-brk ./node_modules/.bin/jest",
+    "a-db1": "jest --detectOpenHandles",
     "b": "jest -t \"request validation\"",
     "b-db": "node --inspect-brk ./node_modules/.bin/jest -it \"request validation\"",
     "z": "jest -t \"moment\"",

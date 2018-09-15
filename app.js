@@ -106,6 +106,10 @@ app.post("/message-signature/validate", (req, res) => {
   const registerStar = validationWindow !== "0.0";
   if (messageSignature === "valid")
     app.validationRequests[address].registerStart = registerStar;
+  /* validation successfully completed so disable timeout
+   * the client has as much time as needed to regiter one star  */
+  if (registerStar && messageSignature === "valid")
+    clearTimeout(app.validationRequests[address].timeout);
   return res.send({
     registerStar,
     status: {
@@ -135,24 +139,17 @@ app.post("/block", (req, res) => {
     star.story = star.story.substring(0, maxStoryLength);
   app.chain
     .addBlock(new Block({ address, star }))
-    .then(block => {
-      console.log("add blk =>", block);
-      res.send(block);
-    })
+    .then(block => res.send(block))
     .catch(e => res.send({ error: `add block => ${e}` }));
 });
 
 /** star lookup by block height */
 app.get("/block/:blockHeight", (req, res) => {
   const { blockHeight } = req.params;
-  console.log("height =", blockHeight);
   if (!blockHeight) return res.send({ error: "Get block required height." });
   app.chain
     .getBlock(blockHeight)
-    .then(block => {
-      console.log("blk =>", block);
-      res.send(block);
-    })
+    .then(block => res.send(block))
     .catch(e => res.send({ error: `get block => ${e}` }));
 });
 

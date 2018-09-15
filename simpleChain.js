@@ -168,30 +168,18 @@ class Blockchain {
   }
 
   getchain() {
+    const promises = [];
     const chain = [];
-    return new Promise((resolveOuter, rejectOuter) => {
+    return new Promise((resolve, reject) => {
       for (let height = 0; height < this.height; height++) {
-        this.inProgress = this.inProgress
-          .then(
-            () =>
-              new Promise((resolve, reject) => {
-                db.get(height)
-                  .then(block => {
-                    chain.push(block);
-                    resolve();
-                  })
-                  .catch(e => {
-                    console.error(`Failed show block.`, e);
-                    reject();
-                  });
-              })
-          )
-          .catch(e => {
-            console.error(`Failed show block loop.`, e);
-            rejectOuter();
-          });
+        promises.push(
+          db
+            .get(height)
+            .then(block => chain.push(block))
+            .catch(e => reject(`Failed show block. ${e}`))
+        );
       }
-      resolveOuter(chain);
+      Promise.all(promises).then(() => resolve(chain));
     });
   }
 

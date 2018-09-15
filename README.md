@@ -21,7 +21,7 @@ yarn start
 
 ## Web API
 
-The web APIP server provides the following functionality:
+The web API server provides the following functionality:
 
 - Validate User - via wallet address
 - Register One Star - for validated user
