@@ -281,7 +281,7 @@ can be found in the `index.test.js`.
 - `with test users` from the `star-data.json` file
   - `star registration` registers all the stars in the `star-data.json` file.
   - `star lookup by` looks up stars by wallet address, block hash and block
-    height. It compares them to a retrieved copy of the blockchain data.
+    height. It verifies them with a retrieved copy of the blockchain data.
 
 # Scratch pad
 
