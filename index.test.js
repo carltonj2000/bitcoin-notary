@@ -17,14 +17,6 @@ const { validationWindowOptions } = require("./validationWindow");
 const moment = require("moment");
 
 beforeAll(async () => {
-  try {
-    //console.log(await del(chainDB));
-    //console.log(await del(testStarDataFilename));
-    //console.log(await generateStarData());
-    app.setValidationWindow(validationWindowOptions.oneSecond);
-  } catch (e) {
-    console.log(e);
-  }
   /* change callback to promis so async/await can be used */
   const del = fileDir =>
     new Promise((resolve, reject) =>
@@ -33,9 +25,17 @@ beforeAll(async () => {
         else return resolve(`deleted ${fileDir}`);
       })
     );
+  try {
+    await del(chainDB);
+    await del(testStarDataFilename);
+    await generateStarData();
+    app.setValidationWindow(validationWindowOptions.oneSecond);
+  } catch (e) {
+    console.log(e);
+  }
 });
 
-describe.skip("basic server tests", () => {
+describe("basic server tests", () => {
   test("test server responds", () =>
     request(app)
       .get("/")
@@ -98,6 +98,44 @@ const reqPath = urlpath =>
 /** sleep for a given number of ms - used to test timeout condition */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+describe("id validation", () => {
+  let address, privateKey, compressed;
+
+  beforeAll(async () => {
+    const keyPair = bitcoin.ECPair.makeRandom();
+    ({ publicKey: pubkey, privateKey, compressed } = keyPair);
+    ({ address } = bitcoin.payments.p2pkh({ pubkey }));
+  });
+  test("invalid signature", async done => {
+    await reqValidation(address);
+    const respS = await reqSignature(address, "bad"); // bad signature
+    expect(respS.status.messageSignature).toBe("invalid");
+    done();
+  });
+
+  test("valid signature", async done => {
+    const respV = await reqValidation(address);
+    const signature = bitcoinMessage
+      .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
+      .toString("base64");
+    sleep(app.getExpireTimeInMs() + 1000);
+    const respS = await reqSignature(address, signature);
+    expect(respS.status.messageSignature).toBe("valid");
+    done();
+  });
+
+  test("timeout", async done => {
+    const respV = await reqValidation(address);
+    const signature = bitcoinMessage
+      .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
+      .toString("base64");
+    await sleep(app.getExpireTimeInMs() + 1000);
+    const respS = await reqSignature(address, signature);
+    expect(parseFloat(respS.status.validationWindow)).toBe(0.0);
+    done();
+  });
+});
+
 describe("with test users", () => {
   let users;
 
@@ -115,45 +153,8 @@ describe("with test users", () => {
     }
   });
 
-  describe.skip("id validation", () => {
-    test("invalid signature", async done => {
-      expect(users).not.toBeFalsy();
-      const { address } = users[0]; // arbitrary user address
-      await reqValidation(address);
-      const respS = await reqSignature(address, "bad"); // bad signature
-      expect(respS.status.messageSignature).toBe("invalid");
-      done();
-    });
-
-    test("valid signature", async done => {
-      expect(users).not.toBeFalsy();
-      const { address, privateKey, compressed } = users[0];
-      const respV = await reqValidation(address);
-      const signature = bitcoinMessage
-        .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
-        .toString("base64");
-      sleep(app.getExpireTimeInMs() + 1000);
-      const respS = await reqSignature(address, signature);
-      expect(respS.status.messageSignature).toBe("valid");
-      done();
-    });
-
-    test("timeout", async done => {
-      expect(users).not.toBeFalsy();
-      const { address, privateKey, compressed } = users[0];
-      const respV = await reqValidation(address);
-      const signature = bitcoinMessage
-        .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
-        .toString("base64");
-      await sleep(app.getExpireTimeInMs() + 1000);
-      const respS = await reqSignature(address, signature);
-      expect(parseFloat(respS.status.validationWindow)).toBe(0.0);
-      done();
-    });
-  });
-
-  describe.skip("star registration", async () => {
-    test("for a test users and stars", async done => {
+  describe("star registration", async () => {
+    test("with test users and stars", async done => {
       expect(users).not.toBeFalsy();
       let firstStar = true;
       for (const user of users) {
@@ -192,6 +193,7 @@ describe("with test users", () => {
     beforeAll(async () => (chain = await reqPath("/getchain")));
 
     test("wallet address", async done => {
+      expect(chain.length).toBeGreaterThan(1);
       for (const user of users) {
         const stars = await reqPath(`/star/address:${user.address}`);
         expect(stars.length).toBe(getStarsByWallet(user.address).length);
@@ -199,7 +201,8 @@ describe("with test users", () => {
       done();
     });
 
-    test.skip("hash", async done => {
+    test("hash", async done => {
+      expect(chain.length).toBeGreaterThan(1);
       const star = JSON.parse(getRandomStar());
       const resp = await reqPath(`/star/hash:${star.hash}`);
       expect(resp.height).toBe(star.height);
@@ -207,7 +210,8 @@ describe("with test users", () => {
       done();
     });
 
-    test.skip("block height", async done => {
+    test("block height", async done => {
+      expect(chain.length).toBeGreaterThan(1);
       const star = JSON.parse(getRandomStar());
       const resp = await reqPath(`/block/${star.height}`);
       expect(resp.height).toBe(star.height);
