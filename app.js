@@ -7,9 +7,8 @@ const bitcoin = require("bitcoinjs-lib");
 const bitcoinMessage = require("bitcoinjs-message");
 const moment = require("moment");
 
-const { Blockchain, Block, chainDB } = require("./simpleChain");
+const { Blockchain, Block } = require("./simpleChain");
 const { validationWindowDefault } = require("./validationWindow");
-
 const app = express();
 app.use(express.static("public"));
 app.use(express.json());
@@ -40,7 +39,7 @@ app.post("/requestValidation", (req, res) => {
   /* remove this entry when the time expires */
   const timeout = setTimeout(
     () => delete app.validationRequests[address],
-    app.getExpireTimeInMs()
+    app.getExpireTimeInMs() * 2
   );
   app.validationRequests[address] = { requestTimeStamp, timeout };
   res.send(message(address));
