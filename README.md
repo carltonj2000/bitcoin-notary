@@ -283,6 +283,8 @@ can be found in the `index.test.js`.
   - `star lookup by` looks up stars by wallet address, block hash and block
     height. It verifies them with a retrieved copy of the blockchain data.
 
+# Review 2 notes
+
 # Scratch pad
 
 Ignore every thing below this line, as I use it for a scratch pad.

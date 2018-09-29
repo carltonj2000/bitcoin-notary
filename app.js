@@ -138,18 +138,53 @@ app.post("/block", (req, res) => {
     return res.send({
       error: "Missing address required for start registration."
     });
+  if (
+    app.validationRequests[address] === undefined ||
+    !app.validationRequests[address]
+  )
+    return res.send({
+      error: "Error. Can't register. Blockchain ID validation not completed."
+    });
   if (star == undefined || !star)
     return res.send({
       error: "Missing star information required for start registration."
     });
+  if (star.dec == undefined || !star.dec)
+    return res.send({
+      error: "Missing star dec information required for start registration."
+    });
+  if (star.ra == undefined || !star.ra)
+    return res.send({
+      error: "Missing star ra information required for start registration."
+    });
+  if (star.story == undefined || !star.story)
+    return res.send({
+      error: "Missing star story information required for start registration."
+    });
   const maxStoryLength = 500;
   if (star.story.length > maxStoryLength)
-    star.story = star.story.substring(0, maxStoryLength);
+    return res.send({
+      error: `Star story must be less than ${maxStoryLength}`
+    });
+  star.story = a2hex(star.story);
   app.chain
     .addBlock(new Block({ address, star }))
-    .then(block => res.send(block))
+    .then(block => {
+      delete app.validationRequests[address];
+      res.send(block);
+    })
     .catch(e => res.send({ error: `add block => ${e}` }));
 });
+
+/* ascii to hex conversion */
+function a2hex(str) {
+  var arr = [];
+  for (var i = 0, l = str.length; i < l; i++) {
+    var hex = Number(str.charCodeAt(i)).toString(16);
+    arr.push((hex.length > 1 && hex) || "0" + hex);
+  }
+  return arr.join("");
+}
 
 /** star lookup by block height */
 app.get("/block/:blockHeight", (req, res) => {
@@ -157,7 +192,7 @@ app.get("/block/:blockHeight", (req, res) => {
   if (!blockHeight) return res.send({ error: "Get block required height." });
   app.chain
     .getBlock(blockHeight)
-    .then(block => res.send(block))
+    .then(block => res.send(storyDecode(block)))
     .catch(e => res.send({ error: `get block => ${e}` }));
 });
 
@@ -166,7 +201,10 @@ app.get("/stars/address::address", (req, res) => {
   const { address } = req.params;
   app.chain
     .searchByAddress(address)
-    .then(stars => res.send(stars))
+    .then(stars => {
+      stars.forEach(star => storyDecode(star));
+      res.send(stars);
+    })
     .catch(e =>
       res.send({
         error: `search failed for address => ${address}. ${e.message}`
@@ -179,11 +217,25 @@ app.get("/stars/hash::hash", (req, res) => {
   const { hash } = req.params;
   app.chain
     .searchByHash(hash)
-    .then(star => res.send(star))
+    .then(star => res.send(storyDecode(star)))
     .catch(e =>
       res.send({ error: `search failed for hash => ${hash}. ${e.message}` })
     );
 });
+
+/* add a hex to ascii decoded story to a star */
+function storyDecode(star) {
+  star.body.star.storyDecoded = hex2a(star.body.star.story);
+  return star;
+}
+
+/* hex to ascii conversion */
+function hex2a(hex) {
+  var str = "";
+  for (var i = 0; i < hex.length && hex.substr(i, 2) !== "00"; i += 2)
+    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+  return str;
+}
 
 /** get the complete block chain - use in testing */
 app.get("/getchain", (_, res) => {

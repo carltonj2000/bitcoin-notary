@@ -136,7 +136,7 @@ const reqPath = urlpath =>
 /** sleep for a given number of ms - used to test timeout condition */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-describe("id validation", () => {
+describe.skip("id validation", () => {
   let address, privateKey, compressed;
 
   beforeAll(async () => {
@@ -144,14 +144,14 @@ describe("id validation", () => {
     ({ publicKey: pubkey, privateKey, compressed } = keyPair);
     ({ address } = bitcoin.payments.p2pkh({ pubkey }));
   });
-  test.skip("invalid signature", async done => {
+  test("invalid signature", async done => {
     await reqValidation(address);
     const respS = await reqSignature(address, "bad"); // bad signature
     expect(respS.status.messageSignature).toBe("invalid");
     done();
   });
 
-  test.skip("valid signature", async done => {
+  test("valid signature", async done => {
     const respV = await reqValidation(address);
     const signature = bitcoinMessage
       .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)
@@ -174,7 +174,7 @@ describe("id validation", () => {
   });
 });
 
-describe.skip("with test users", () => {
+describe("with test users", () => {
   let users;
 
   beforeAll(async () => {
@@ -191,7 +191,7 @@ describe.skip("with test users", () => {
     }
   });
 
-  describe("star registration", async () => {
+  describe.skip("star registration", async () => {
     test("with test users and stars", async done => {
       expect(users).not.toBeFalsy();
       let firstStar = true;
@@ -235,11 +235,12 @@ describe.skip("with test users", () => {
       for (const user of users) {
         const stars = await reqPath(`/stars/address:${user.address}`);
         expect(stars.length).toBe(getStarsByWallet(user.address).length);
+        break;
       }
       done();
     });
 
-    test("hash", async done => {
+    test.skip("hash", async done => {
       expect(chain.length).toBeGreaterThan(1);
       const star = JSON.parse(getRandomStar());
       const resp = await reqPath(`/stars/hash:${star.hash}`);
@@ -248,7 +249,7 @@ describe.skip("with test users", () => {
       done();
     });
 
-    test("block height", async done => {
+    test.skip("block height", async done => {
       expect(chain.length).toBeGreaterThan(1);
       const star = JSON.parse(getRandomStar());
       const resp = await reqPath(`/block/${star.height}`);

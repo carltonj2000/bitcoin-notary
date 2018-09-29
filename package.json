@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "nodemon index.js",
+    "dbg": "nodemon --inspect-brk index.js",
     "test": "jest",
     "testdoh": "jest --detectOpenHandles",
     "a-db": "node --inspect-brk ./node_modules/.bin/jest",
