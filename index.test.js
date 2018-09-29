@@ -136,7 +136,7 @@ const reqPath = urlpath =>
 /** sleep for a given number of ms - used to test timeout condition */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-describe.skip("id validation", () => {
+describe("id validation", () => {
   let address, privateKey, compressed;
 
   beforeAll(async () => {
@@ -144,14 +144,14 @@ describe.skip("id validation", () => {
     ({ publicKey: pubkey, privateKey, compressed } = keyPair);
     ({ address } = bitcoin.payments.p2pkh({ pubkey }));
   });
-  test("invalid signature", async done => {
+  test.skip("invalid signature", async done => {
     await reqValidation(address);
     const respS = await reqSignature(address, "bad"); // bad signature
     expect(respS.status.messageSignature).toBe("invalid");
     done();
   });
 
-  test("valid signature", async done => {
+  test.skip("valid signature", async done => {
     const respV = await reqValidation(address);
     const signature = bitcoinMessage
       .sign(respV.message, new Buffer.from(privateKey, "base64"), compressed)

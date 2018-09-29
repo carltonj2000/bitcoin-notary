@@ -116,6 +116,8 @@ app.post("/message-signature/validate", (req, res) => {
    * the client has as much time as needed to regiter one star  */
   if (registerStar && messageSignature === "valid")
     clearTimeout(app.validationRequests[address].timeout);
+  /* don't agree with line below but the udacity reviewer wanted it */
+  if (validationWindow === "0.0") messageSignature = "invalid";
   return res.send({
     registerStar,
     status: {
