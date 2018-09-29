@@ -3,7 +3,6 @@
  * @fileoverview Private Blockchain Notary Webservice
  */
 const express = require("express");
-const bitcoin = require("bitcoinjs-lib");
 const bitcoinMessage = require("bitcoinjs-message");
 const moment = require("moment");
 
@@ -46,6 +45,25 @@ app.post("/requestValidation", (req, res) => {
 });
 
 /* constructs a request validation message */
+const timeRemaining = requestTimeStamp => {
+  const requestTS = moment(requestTimeStamp);
+  const timeNow = moment();
+  if (
+    requestTS
+      .clone()
+      .add(app.validationWindow.number, app.validationWindow.units)
+      .isBefore(timeNow)
+  )
+    return 0;
+  return moment(
+    requestTS
+      .clone()
+      .add(app.validationWindow.number, app.validationWindow.units)
+      .diff(timeNow)
+  );
+};
+
+/* constructs a request validation message */
 const message = address => {
   const { requestTimeStamp } = app.validationRequests[address];
   const validationWindow = validationWin(requestTimeStamp);
@@ -59,27 +77,11 @@ const messageGenerate = (address, requestTimeStamp) =>
 
 /* calculates the time remaining for the request */
 const validationWin = requestTimeStamp => {
-  const requestTS = moment(requestTimeStamp);
-  const timeNow = moment();
-  let validationWindow;
-  if (
-    requestTS
-      .clone()
-      .add(app.validationWindow.number, app.validationWindow.units)
-      .isBefore(timeNow)
-  )
-    validationWindow = "0.0";
-  else {
-    timeRemaining = moment(
-      requestTS
-        .clone()
-        .add(app.validationWindow.number, app.validationWindow.units)
-        .diff(timeNow)
-    );
-    const fractionOfSeconds = timeRemaining.format("S");
-    const seconds = timeRemaining.seconds() + timeRemaining.minutes() * 60;
-    validationWindow = `${seconds}.${fractionOfSeconds}`;
-  }
+  let validationWindow = "0.0";
+  const timeR = timeRemaining(requestTimeStamp);
+  if (timeR !== 0)
+    validationWindow = `${timeR.seconds() +
+      timeR.minutes() * 60}.${timeR.format("S")}`;
   return validationWindow;
 };
 
@@ -158,7 +160,11 @@ app.get("/stars/address::address", (req, res) => {
   app.chain
     .searchByAddress(address)
     .then(stars => res.send(stars))
-    .catch(e => res.send({ error: `search failed for address => ${address}` }));
+    .catch(e =>
+      res.send({
+        error: `search failed for address => ${address}. ${e.message}`
+      })
+    );
 });
 
 /** star lookup by block hash */
@@ -167,7 +173,9 @@ app.get("/stars/hash::hash", (req, res) => {
   app.chain
     .searchByHash(hash)
     .then(star => res.send(star))
-    .catch(e => res.send({ error: `search failed for hash => ${hash}` }));
+    .catch(e =>
+      res.send({ error: `search failed for hash => ${hash}. ${e.message}` })
+    );
 });
 
 /** get the complete block chain - use in testing */
