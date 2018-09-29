@@ -3,6 +3,7 @@
 
 const validationWindowOptions = Object.freeze({
   oneSecond: { number: 1, units: "seconds" },
+  twoSeconds: { number: 2, units: "seconds" },
   tenSeconds: { number: 10, units: "seconds" },
   oneMinute: { number: 1, units: "minutes" },
   fiveMinutes: { number: 5, units: "minutes" }

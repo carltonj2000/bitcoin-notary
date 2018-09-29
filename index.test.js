@@ -28,30 +28,69 @@ beforeAll(async done => {
   //await del(chainDB);
   //await del(testStarDataFilename);
   //await generateStarData();
-  const validationWindow = validationWindowOptions.oneSecond;
+  const validationWindow = validationWindowOptions.twoSeconds;
   app.setValidationWindow(validationWindow);
   jest.setTimeout(app.getExpireTimeInMs() * 2 + 1000);
   done();
 });
 
-describe("basic server tests", () => {
+describe.skip("basic server tests", () => {
   test("test server responds", () =>
     request(app)
       .get("/")
       .expect(200));
 
-  test("verify user timeout", async done => {
+  test("back to back user validation req", async done => {
+    const secondsReqMs = 200;
     const dummy = "dummy";
     const resp = await reqValidation(dummy);
     expect(resp.address).toEqual(dummy);
-    expect(parseFloat(resp.validationWindow)).toBeGreaterThan(0.0);
+    const vWindow1 = parseFloat(resp.validationWindow);
+    expect(vWindow1).toBeGreaterThan(0.0);
     /* verify that after a timeout we get a new validation window */
     setTimeout(async () => {
       const resp = await reqValidation(dummy);
       expect(resp.address).toEqual(dummy);
-      expect(parseFloat(resp.validationWindow)).toBeGreaterThan(0.0);
+      const vWindow2 = parseFloat(resp.validationWindow);
+      expect(vWindow2).toBeGreaterThan(0.0);
+      expect(vWindow1).toBeGreaterThan(vWindow2);
       done();
-    }, app.getExpireTimeInMs() + 1000);
+    }, secondsReqMs);
+  });
+
+  test("almost at timeout second user validation req", async done => {
+    const secondsReqMs = app.getExpireTimeInMs() - 500;
+    const dummy = "dummy";
+    const resp = await reqValidation(dummy);
+    expect(resp.address).toEqual(dummy);
+    const vWindow1 = parseFloat(resp.validationWindow);
+    expect(vWindow1).toBeGreaterThan(0.0);
+    /* verify that after a timeout we get a new validation window */
+    setTimeout(async () => {
+      const resp = await reqValidation(dummy);
+      expect(resp.address).toEqual(dummy);
+      const vWindow2 = parseFloat(resp.validationWindow);
+      expect(vWindow2).toBeGreaterThan(0.0);
+      expect(vWindow1).toBeGreaterThan(vWindow2);
+      done();
+    }, secondsReqMs);
+  });
+
+  test("after timeout second user validation req", async done => {
+    const secondsReqMs = app.getExpireTimeInMs() * 1.5;
+    const dummy = "dummy";
+    const resp = await reqValidation(dummy);
+    expect(resp.address).toEqual(dummy);
+    const vWindow1 = parseFloat(resp.validationWindow);
+    expect(vWindow1).toBeGreaterThan(0.0);
+    /* verify that after a timeout we get a new validation window */
+    setTimeout(async () => {
+      const resp = await reqValidation(dummy);
+      expect(resp.address).toEqual(dummy);
+      const vWindow2 = parseFloat(resp.validationWindow);
+      expect(vWindow2).toBeGreaterThan(0);
+      done();
+    }, secondsReqMs);
   });
 });
 
@@ -97,7 +136,7 @@ const reqPath = urlpath =>
 /** sleep for a given number of ms - used to test timeout condition */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-describe("id validation", () => {
+describe.skip("id validation", () => {
   let address, privateKey, compressed;
 
   beforeAll(async () => {
@@ -135,7 +174,7 @@ describe("id validation", () => {
   });
 });
 
-describe("with test users", () => {
+describe.skip("with test users", () => {
   let users;
 
   beforeAll(async () => {

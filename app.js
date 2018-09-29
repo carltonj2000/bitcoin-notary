@@ -33,13 +33,18 @@ app.post("/requestValidation", (req, res) => {
   const { address } = req.body;
   if (address === undefined)
     return res.send({ error: "address required in body." });
-  if (app.validationRequests[address]) return res.send(message(address));
-  const requestTimeStamp = moment().valueOf();
-  /* remove this entry when the time expires */
+  if (
+    app.validationRequests[address] &&
+    timeRemaining(app.validationRequests[address].requestTimeStamp) !== 0
+  )
+    return res.send(message(address));
+  if (app.validationRequests[address]) delete app.validationRequests[address];
+  /* to remove this entry when the time expires */
   const timeout = setTimeout(
     () => delete app.validationRequests[address],
     app.getExpireTimeInMs() * 2
   );
+  const requestTimeStamp = moment().valueOf();
   app.validationRequests[address] = { requestTimeStamp, timeout };
   res.send(message(address));
 });
