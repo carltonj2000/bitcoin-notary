@@ -4,7 +4,6 @@
  */
 const fs = require("fs");
 const request = require("supertest");
-const rimraf = require("rimraf"); // utility to remove a non empty directory
 const bitcoin = require("bitcoinjs-lib");
 const bitcoinMessage = require("bitcoinjs-message");
 const app = require("./app");
@@ -14,27 +13,29 @@ const {
   testStarDataFilename
 } = require("./generate-star-data");
 const { validationWindowOptions } = require("./validationWindow");
-const moment = require("moment");
 
-beforeAll(async done => {
-  /* change callback to promis so async/await can be used */
-  const del = fileDir =>
-    new Promise((resolve, reject) =>
-      rimraf(fileDir, e => {
-        if (e) return reject(e);
-        else return resolve(`deleted ${fileDir}`);
-      })
-    );
-  //await del(chainDB);
-  //await del(testStarDataFilename);
-  //await generateStarData();
+var deleteFolderRecursive = function(path) {
+  if (fs.existsSync(path)) {
+    fs.readdirSync(path).forEach(function(file, index) {
+      var curPath = path + "/" + file;
+      if (fs.lstatSync(curPath).isDirectory()) deleteFolderRecursive(curPath);
+      else fs.unlinkSync(curPath);
+    });
+    fs.rmdirSync(path);
+  }
+};
+
+beforeAll(done => {
+  deleteFolderRecursive(chainDB);
+  fs.unlinkSync(testStarDataFilename);
+  generateStarData();
   const validationWindow = validationWindowOptions.twoSeconds;
   app.setValidationWindow(validationWindow);
   jest.setTimeout(app.getExpireTimeInMs() * 2 + 1000);
   done();
 });
 
-describe.skip("basic server tests", () => {
+describe("basic server tests", () => {
   test("test server responds", () =>
     request(app)
       .get("/")
@@ -136,7 +137,7 @@ const reqPath = urlpath =>
 /** sleep for a given number of ms - used to test timeout condition */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-describe.skip("id validation", () => {
+describe("id validation", () => {
   let address, privateKey, compressed;
 
   beforeAll(async () => {
@@ -191,7 +192,7 @@ describe("with test users", () => {
     }
   });
 
-  describe.skip("star registration", async () => {
+  describe("star registration", async () => {
     test("with test users and stars", async done => {
       expect(users).not.toBeFalsy();
       let firstStar = true;
@@ -235,12 +236,11 @@ describe("with test users", () => {
       for (const user of users) {
         const stars = await reqPath(`/stars/address:${user.address}`);
         expect(stars.length).toBe(getStarsByWallet(user.address).length);
-        break;
       }
       done();
     });
 
-    test.skip("hash", async done => {
+    test("hash", async done => {
       expect(chain.length).toBeGreaterThan(1);
       const star = JSON.parse(getRandomStar());
       const resp = await reqPath(`/stars/hash:${star.hash}`);
@@ -249,7 +249,7 @@ describe("with test users", () => {
       done();
     });
 
-    test.skip("block height", async done => {
+    test("block height", async done => {
       expect(chain.length).toBeGreaterThan(1);
       const star = JSON.parse(getRandomStar());
       const resp = await reqPath(`/block/${star.height}`);

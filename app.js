@@ -166,6 +166,10 @@ app.post("/block", (req, res) => {
     return res.send({
       error: `Star story must be less than ${maxStoryLength}`
     });
+  if (!isASCII(star.story))
+    return res.send({
+      error: "Star story must contain only ASCII characters."
+    });
   star.story = a2hex(star.story);
   app.chain
     .addBlock(new Block({ address, star }))
@@ -175,6 +179,11 @@ app.post("/block", (req, res) => {
     })
     .catch(e => res.send({ error: `add block => ${e}` }));
 });
+
+/* check for ascii characters */
+function isASCII(str) {
+  return /^[\x00-\x7F]*$/.test(str);
+}
 
 /* ascii to hex conversion */
 function a2hex(str) {

@@ -4,7 +4,6 @@
  */
 const fs = require("fs");
 const bitcoin = require("bitcoinjs-lib");
-const bitcoinMessage = require("bitcoinjs-message");
 
 const testStarDataFilename = "star-data.json";
 
@@ -36,11 +35,7 @@ const generateStarData = () => {
   }
 
   const stars = JSON.stringify(starData, undefined, 2);
-  return new Promise(resolve => {
-    fs.writeFile(testStarDataFilename, stars, "utf8", () =>
-      resolve(`Star data written to => ${testStarDataFilename}`)
-    );
-  });
+  fs.writeFileSync(testStarDataFilename, stars, "utf8");
 };
 
 if (typeof require != "undefined" && require.main === module)
